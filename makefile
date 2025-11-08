@@ -20,5 +20,5 @@ getBinaryMemProfile:
 
 
 makeBinaryAndPprof:
-	go test -bench . -benchmem -cpuprofile=./prof/out/cpu.out -memprofile=./prof/out/mem.out -memprofilerate=1 main_test.go
+	go test -bench -benchmem -cpuprofile=./prof/out/cpuprofile.out -memprofile=./prof/out/memprofile.out -memprofilerate=1
 	go tool pprof -http=:8080 ./prof/out/cpu.out
