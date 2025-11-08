@@ -18,7 +18,17 @@ getBinaryMemProfile:
 	go test -bench -benchmem -memprofile=prof/out/memprofile.out
 
 
-
+#Вызывать по порядку, чтобы обновились оба профиля и потом можно было смотреть их вместе
+#1
 makeBinaryAndPprof:
 	go test -bench -benchmem -cpuprofile=./prof/out/cpuprofile.out -memprofile=./prof/out/memprofile.out -memprofilerate=1
-	go tool pprof -http=:8080 ./prof/out/cpu.out
+
+#2
+MakeProfsCPU:
+	go tool pprof -http=:8084 ./prof/out/cpuprofile.out
+
+#3
+MakeProfsMem:
+	go tool pprof -http=:8085 ./prof/out/memprofile.out
+
+# по идее есть возможность вызвать меню pprof и там вызвать комманду web
