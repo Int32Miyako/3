@@ -5,10 +5,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 )
+
+type User struct {
+	Browsers []string
+	Company  string
+	Country  string
+	Email    string
+	Job      string
+	Name     string
+	Phone    string
+}
 
 func FastSearch(out io.Writer) {
 
@@ -21,11 +30,12 @@ func FastSearch(out io.Writer) {
 		seenBrowsers   []string
 		uniqueBrowsers int
 		foundUsers     string
+		ok             bool
 	)
 
-	users := make([]map[string]interface{}, 0)
+	users := make([]User, 0)
 	for _, line := range lines {
-		user := make(map[string]interface{})
+		var user User
 		// fmt.Printf("%v %v\n", err, line)
 		err = json.Unmarshal([]byte(line), &user)
 		if err != nil {
@@ -39,17 +49,15 @@ func FastSearch(out io.Writer) {
 		isAndroid := false
 		isMSIE := false
 
-		browsers, ok := user["browsers"].([]interface{})
-		if !ok {
-			log.Println("cant cast browsers")
+		browsers := user.Browsers
+		if browsers == nil {
+			//log.Println("cant cast browsers")
 			continue
 		}
 
-		var browser string
-		for _, browserRaw := range browsers {
-			browser, ok = browserRaw.(string)
-			if !ok {
-				log.Println("cant cast browser to string")
+		for _, browser := range browsers {
+			if browser == "" {
+				//log.Println("cant cast browser to string")
 				continue
 			}
 
@@ -69,10 +77,9 @@ func FastSearch(out io.Writer) {
 			}
 		}
 
-		for _, browserRaw := range browsers {
-			browser, ok = browserRaw.(string)
+		for _, browser := range browsers {
 			if !ok {
-				log.Println("cant cast browser to string")
+				//log.Println("cant cast browser to string")
 				continue
 			}
 			if ok = strings.Contains(browser, "MSIE"); ok {
@@ -97,8 +104,8 @@ func FastSearch(out io.Writer) {
 
 		// log.Println("Android and MSIE user:", user["name"], user["email"])
 
-		email := strings.ReplaceAll(user["email"].(string), "@", " [at] ")
-		foundUsers += fmt.Sprintf("[%d] %s <%s>\n", i, user["name"], email)
+		email := strings.ReplaceAll(user.Email, "@", " [at] ")
+		foundUsers += fmt.Sprintf("[%d] %s <%s>\n", i, user.Name, email)
 	}
 
 	_, err = fmt.Fprintln(out, "found users:\n"+foundUsers)
