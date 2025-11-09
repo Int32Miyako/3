@@ -21,7 +21,7 @@ type User struct {
 
 func FastSearch(out io.Writer) {
 
-	lines, err := readFile(filePath)
+	users, err := readFile(filePath)
 	if err != nil {
 		panic(err)
 	}
@@ -32,17 +32,6 @@ func FastSearch(out io.Writer) {
 		foundUsers     string
 		ok             bool
 	)
-
-	users := make([]User, 0)
-	for _, line := range lines {
-		var user User
-		// fmt.Printf("%v %v\n", err, line)
-		err = json.Unmarshal([]byte(line), &user)
-		if err != nil {
-			panic(err)
-		}
-		users = append(users, user)
-	}
 
 	for i, user := range users {
 
@@ -118,8 +107,8 @@ func FastSearch(out io.Writer) {
 	}
 }
 
-// readFile читает файл построчно и возвращает слайс строк
-func readFile(filepath string) ([]string, error) {
+// readFile читает файл построчно и возвращает слайс юзеров
+func readFile(filepath string) ([]User, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
@@ -131,19 +120,21 @@ func readFile(filepath string) ([]string, error) {
 	}(file)
 
 	var (
-		lines []string
+		users []User
+		user  User
 	)
 
 	// по умолчанию разбивает входной поток по символу новой строки \n
 	scanner := bufio.NewScanner(file)
-	buf := make([]byte, 0, 2048)
-	scanner.Buffer(buf, 4096)
+
 	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-		if scanner.Err() != nil {
-			return nil, scanner.Err()
+		// fmt.Printf("%v %v\n", err, line)
+		err = json.Unmarshal(scanner.Bytes(), &user)
+		if err != nil {
+			panic(err)
 		}
+		users = append(users, user)
 	}
 
-	return lines, closeErr
+	return users, closeErr
 }
