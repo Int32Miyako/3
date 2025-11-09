@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 )
@@ -53,16 +54,18 @@ func FastSearch(out io.Writer) {
 
 		browsers, ok := user["browsers"].([]interface{})
 		if !ok {
-			// log.Println("cant cast browsers")
+			log.Println("cant cast browsers")
 			continue
 		}
 
+		var browser string
 		for _, browserRaw := range browsers {
-			browser, ok := browserRaw.(string)
+			browser, ok = browserRaw.(string)
 			if !ok {
-				// log.Println("cant cast browser to string")
+				log.Println("cant cast browser to string")
 				continue
 			}
+
 			if ok = strings.Contains(browser, "Android"); ok {
 				isAndroid = true
 				notSeenBefore := true
