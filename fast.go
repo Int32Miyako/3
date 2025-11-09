@@ -2,13 +2,11 @@ package main
 
 import (
 	"bufio"
-
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strings"
-
-	"github.com/mailru/easyjson"
 )
 
 type User struct {
@@ -23,7 +21,7 @@ type User struct {
 
 func FastSearch(out io.Writer) {
 
-	users, err := readFile(filePath)
+	lines, err := readFile(filePath)
 	if err != nil {
 		panic(err)
 	}
@@ -32,8 +30,18 @@ func FastSearch(out io.Writer) {
 		seenBrowsers   []string
 		uniqueBrowsers int
 		foundUsers     string
-		ok             bool
 	)
+
+	var users []User
+	for _, line := range lines {
+		var user User
+		// fmt.Printf("%v %v\n", err, line)
+		err = json.Unmarshal([]byte(line), &user)
+		if err != nil {
+			panic(err)
+		}
+		users = append(users, user)
+	}
 
 	for i, user := range users {
 
@@ -41,18 +49,11 @@ func FastSearch(out io.Writer) {
 		isMSIE := false
 
 		browsers := user.Browsers
-		if browsers == nil {
-			//log.Println("cant cast browsers")
-			continue
-		}
 
-		for _, browser := range browsers {
-			if browser == "" {
-				//log.Println("cant cast browser to string")
-				continue
-			}
+		var browser string
+		for _, browser = range browsers {
 
-			if ok = strings.Contains(browser, "Android"); ok {
+			if ok := strings.Contains(browser, "Android"); ok {
 				isAndroid = true
 				notSeenBefore := true
 				for _, item := range seenBrowsers {
@@ -68,12 +69,9 @@ func FastSearch(out io.Writer) {
 			}
 		}
 
-		for _, browser := range browsers {
-			if !ok {
-				//log.Println("cant cast browser to string")
-				continue
-			}
-			if ok = strings.Contains(browser, "MSIE"); ok {
+		for _, browser = range browsers {
+
+			if ok := strings.Contains(browser, "MSIE"); ok {
 				isMSIE = true
 				notSeenBefore := true
 				for _, item := range seenBrowsers {
@@ -109,8 +107,8 @@ func FastSearch(out io.Writer) {
 	}
 }
 
-// readFile читает файл построчно и возвращает слайс юзеров
-func readFile(filepath string) ([]User, error) {
+// readFile читает файл построчно и возвращает слайс строк
+func readFile(filepath string) ([]string, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
@@ -122,21 +120,17 @@ func readFile(filepath string) ([]User, error) {
 	}(file)
 
 	var (
-		users []User
-		user  User
+		lines []string
 	)
 
 	// по умолчанию разбивает входной поток по символу новой строки \n
 	scanner := bufio.NewScanner(file)
-
 	for scanner.Scan() {
-		// fmt.Printf("%v %v\n", err, line)
-		err = easyjson.Unmarshal(scanner.Bytes(), &user)
-		if err != nil {
-			panic(err)
+		lines = append(lines, scanner.Text())
+		if scanner.Err() != nil {
+			return nil, scanner.Err()
 		}
-		users = append(users, user)
 	}
 
-	return users, closeErr
+	return lines, closeErr
 }
