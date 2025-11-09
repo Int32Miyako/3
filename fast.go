@@ -13,12 +13,6 @@ import (
 func FastSearch(out io.Writer) {
 
 	lines, err := readFile(filePath)
-	//file, err := os.Open(filePath)
-	if err != nil {
-		panic(err)
-	}
-
-	//fileContents, err := ioutil.ReadAll(file)
 	if err != nil {
 		panic(err)
 	}
@@ -28,8 +22,6 @@ func FastSearch(out io.Writer) {
 		uniqueBrowsers int
 		foundUsers     string
 	)
-
-	//lines := strings.Split(string(fileContents), "\n")
 
 	users := make([]map[string]interface{}, 0)
 	for _, line := range lines {
@@ -109,8 +101,14 @@ func FastSearch(out io.Writer) {
 		foundUsers += fmt.Sprintf("[%d] %s <%s>\n", i, user["name"], email)
 	}
 
-	fmt.Fprintln(out, "found users:\n"+foundUsers)
-	fmt.Fprintln(out, "Total unique browsers", len(seenBrowsers))
+	_, err = fmt.Fprintln(out, "found users:\n"+foundUsers)
+	if err != nil {
+		return
+	}
+	_, err = fmt.Fprintln(out, "Total unique browsers", len(seenBrowsers))
+	if err != nil {
+		return
+	}
 }
 
 // readFile читает файл построчно и возвращает слайс строк
@@ -119,7 +117,11 @@ func readFile(filepath string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+
+	var closeErr error
+	defer func(file *os.File) {
+		closeErr = file.Close()
+	}(file)
 
 	var (
 		lines []string
@@ -136,5 +138,5 @@ func readFile(filepath string) ([]string, error) {
 		}
 	}
 
-	return lines, nil
+	return lines, closeErr
 }
