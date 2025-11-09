@@ -2,11 +2,13 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
+
 	"fmt"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/mailru/easyjson"
 )
 
 type User struct {
@@ -129,7 +131,7 @@ func readFile(filepath string) ([]User, error) {
 
 	for scanner.Scan() {
 		// fmt.Printf("%v %v\n", err, line)
-		err = json.Unmarshal(scanner.Bytes(), &user)
+		err = easyjson.Unmarshal(scanner.Bytes(), &user)
 		if err != nil {
 			panic(err)
 		}
