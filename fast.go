@@ -1,46 +1,41 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 )
 
-// вам надо написать более быструю оптимальную этой функции
 func FastSearch(out io.Writer) {
-	/*
-		!!! !!! !!!
-		обратите внимание - в задании обязательно нужен отчет
-		делать его лучше в самом начале, когда вы видите уже узкие места, но еще не оптимизировалм их
-		так же обратите внимание на команду в параметром -http
-		перечитайте еще раз задание
-		!!! !!! !!!
-	*/
-	file, err := os.Open(filePath)
+
+	lines, err := readFile(filePath)
+	//file, err := os.Open(filePath)
 	if err != nil {
 		panic(err)
 	}
 
-	fileContents, err := ioutil.ReadAll(file)
+	//fileContents, err := ioutil.ReadAll(file)
 	if err != nil {
 		panic(err)
 	}
 
-	seenBrowsers := []string{}
-	uniqueBrowsers := 0
-	foundUsers := ""
+	var (
+		seenBrowsers   []string
+		uniqueBrowsers int
+		foundUsers     string
+	)
 
-	lines := strings.Split(string(fileContents), "\n")
+	//lines := strings.Split(string(fileContents), "\n")
 
 	users := make([]map[string]interface{}, 0)
 	for _, line := range lines {
 		user := make(map[string]interface{})
 		// fmt.Printf("%v %v\n", err, line)
-		err := json.Unmarshal([]byte(line), &user)
+		err = json.Unmarshal([]byte(line), &user)
 		if err != nil {
 			panic(err)
 		}
@@ -83,9 +78,9 @@ func FastSearch(out io.Writer) {
 		}
 
 		for _, browserRaw := range browsers {
-			browser, ok := browserRaw.(string)
+			browser, ok = browserRaw.(string)
 			if !ok {
-				// log.Println("cant cast browser to string")
+				log.Println("cant cast browser to string")
 				continue
 			}
 			if ok = strings.Contains(browser, "MSIE"); ok {
@@ -116,4 +111,30 @@ func FastSearch(out io.Writer) {
 
 	fmt.Fprintln(out, "found users:\n"+foundUsers)
 	fmt.Fprintln(out, "Total unique browsers", len(seenBrowsers))
+}
+
+// readFile читает файл построчно и возвращает слайс строк
+func readFile(filepath string) ([]string, error) {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var (
+		lines []string
+	)
+
+	// по умолчанию разбивает входной поток по символу новой строки \n
+	scanner := bufio.NewScanner(file)
+	buf := make([]byte, 0, 2048)
+	scanner.Buffer(buf, 4096)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+		if scanner.Err() != nil {
+			return nil, scanner.Err()
+		}
+	}
+
+	return lines, nil
 }
